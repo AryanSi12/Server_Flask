@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS module
+from flask_cors import CORS
 import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
-import joblib  # Import joblib
+import joblib
 import os
 
 # Disable GPU for compatibility
@@ -14,8 +14,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # Initialize Flask app
 app = Flask(__name__)
 
-# Enable CORS for all routes (Allowing specific domains)
-CORS(app, resources={r"/predict": {"origins": "*"}})  # Change '*' to your frontend URL later
+# Enable CORS globally (Allow all origins, but you can change "*" to a specific frontend URL)
+CORS(app, supports_credentials=True)
 
 # Load trained model
 model_path = "my_model1.keras"
@@ -34,8 +34,17 @@ tokenizer = joblib.load(tokenizer_path)
 # Tokenizer parameters
 max_len = 100
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['OPTIONS', 'POST'])
 def predict():
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'CORS preflight passed'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response, 200
+
     try:
         # Get JSON data from request
         data = request.get_json()
@@ -57,11 +66,12 @@ def predict():
         results = [{'comment': comment, 'sentiment': sentiment_labels[np.argmax(pred)]}
                    for comment, pred in zip(comments, predictions)]
 
-        # Return JSON response with CORS headers
+        # Return JSON response with proper CORS headers
         response = jsonify({'predictions': results})
         response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
         response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "POST")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
         return response
     except Exception as e:
         response = jsonify({'error': f"An error occurred: {str(e)}"})
