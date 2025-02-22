@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS ,cross_origin
 import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -35,6 +35,7 @@ tokenizer = joblib.load(tokenizer_path)
 max_len = 100
 
 @app.route('/predict', methods=['OPTIONS', 'POST'])
+@cross_origin()
 def predict():
     # Handle preflight OPTIONS request
     if request.method == 'OPTIONS':
