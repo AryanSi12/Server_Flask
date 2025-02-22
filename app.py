@@ -14,7 +14,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Suppresses TensorFlow warnings
 app = Flask(__name__)
 
 # Enable CORS for all routes
-CORS(app)  # This will allow cross-origin requests from any domain
+ # This will allow cross-origin requests from any domain
+CORS(app, resources={r"/predict": {"origins": ["http://localhost:5173", "https://your-frontend-domain.com"]}})
 
 # Load trained model
 model_path = "my_model1.keras"  
